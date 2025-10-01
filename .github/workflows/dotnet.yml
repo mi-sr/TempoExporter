@@ -43,14 +43,6 @@ jobs:
           name: Tempo.Exporter
           path: |
             **/publish/*
-      
-      # Zip the artifacts
-      - name: Zip artifacts
-        run: |
-          # Make sure we are in the repo root
-          cd $GITHUB_WORKSPACE
-          # Compress the publish folder(s)
-          Compress-Archive -Path ./**/publish/* -DestinationPath Tempo.Exporter.zip
 
       # Create a release with the artifacts attached
       - name: Create Release
@@ -58,6 +50,6 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           name: "Release ${{ github.run_number }}"
-          files: ./Tempo.Exporter.zip
+          files: publish/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
