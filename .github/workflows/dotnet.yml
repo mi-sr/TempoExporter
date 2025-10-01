@@ -47,7 +47,7 @@ jobs:
       # 5. Zip the artifacts
       - name: Zip artifacts
         run: |
-          Compress-Archive -Path **/publish/* -DestinationPath Tempo.Exporter.zip
+          Compress-Archive -Path **/publish/* -DestinationPath **/publish/Tempo.Exporter.zip
 
       # 6. Create a release with the artifacts attached
       - name: Create Release
@@ -55,6 +55,6 @@ jobs:
         with:
           tag_name: v${{ github.run_number }}
           name: "Release ${{ github.run_number }}"
-          files: Tempo.Exporter.zip
+          files: "**/publish/Tempo.Exporter.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
