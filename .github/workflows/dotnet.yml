@@ -18,25 +18,25 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # Checkout code
+      # 1. Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Setup .NET (adjust version if needed)
+      # 2. Setup .NET (adjust version if needed)
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # Restore dependencies
+      # 3. Restore dependencies
       - name: Restore dependencies
         run: dotnet restore
 
-      # Build & Publish as self-contained exe
+      # 4. Build & Publish as self-contained exe
       - name: Build exe
         run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
-      # Upload exe as an artifact
+      # 5. Upload exe as an artifact
       - name: Upload exe
         uses: actions/upload-artifact@v4
         with:
@@ -44,12 +44,13 @@ jobs:
           path: |
             **/publish/*
 
-      # Create a release with the artifacts attached
+      # 6. Create a release with the artifacts attached
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: "Release ${{ github.run_number }}"
-          files: publish/*
+          files: |
+            **/publish/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
