@@ -18,25 +18,25 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # 1. Checkout code
+      # Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Setup .NET (adjust version if needed)
+      # Setup .NET (adjust version if needed)
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      # 3. Restore dependencies
+      # Restore dependencies
       - name: Restore dependencies
         run: dotnet restore
 
-      # 4. Build & Publish as self-contained exe
+      # Build & Publish as self-contained exe
       - name: Build exe
         run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
-      # 5. Upload exe as an artifact
+      # Upload exe as an artifact
       - name: Upload exe
         uses: actions/upload-artifact@v4
         with:
@@ -44,17 +44,20 @@ jobs:
           path: |
             **/publish/*
       
-      # 5. Zip the artifacts
+      # Zip the artifacts
       - name: Zip artifacts
         run: |
-          Compress-Archive -Path **/publish/* -DestinationPath **/publish/Tempo.Exporter.zip
+          # Make sure we are in the repo root
+          cd $GITHUB_WORKSPACE
+          # Compress the publish folder(s)
+          Compress-Archive -Path ./**/publish/* -DestinationPath Tempo.Exporter.zip
 
-      # 6. Create a release with the artifacts attached
+      # Create a release with the artifacts attached
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: "Release ${{ github.run_number }}"
-          files: "**/publish/Tempo.Exporter.zip"
+          files: ./Tempo.Exporter.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
