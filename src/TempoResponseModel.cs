@@ -1,14 +1,19 @@
-﻿using System.Text.Json.Serialization;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace Tempo.Exporter
 {
-    internal class TempoResponseModel
+    class TempoResponseModel
     {
         [JsonPropertyName("results")]
-        public List<Worklog> Results { get; init; }
+        public List<Worklog> Results { get; set; }
     }
 
-    internal class Worklog
+    class Worklog
     {
         [JsonPropertyName("attributes")]
         public Attributes Attributes { get; set; }

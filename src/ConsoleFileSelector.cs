@@ -1,8 +1,13 @@
 ﻿namespace Tempo.Exporter
 {
-    internal class ConsoleFileSelector(string folderPath)
+    internal class ConsoleFileSelector
     {
-        private string _folderPath = folderPath;
+        private string _folderPath;
+
+        public ConsoleFileSelector(string folderPath)
+        {
+            _folderPath = folderPath;    
+        }
 
         public string SelectExcelFile()
         {
@@ -36,7 +41,7 @@
                 Console.Clear();
                 Console.WriteLine("Use TAB to cycle through Excel files. Press ESC to exit or ENTER to confirm.\n");
 
-                for (var i = 0; i < files.Count; i++)
+                for (int i = 0; i < files.Count; i++)
                 {
                     if (i == selectedIndex)
                     {
@@ -54,13 +59,12 @@
 
                 keyInfo = Console.ReadKey(intercept: true);
 
-                switch (keyInfo.Key)
+                if (keyInfo.Key == ConsoleKey.Tab)
                 {
-                    case ConsoleKey.Tab:
-                        selectedIndex = (selectedIndex + 1) % files.Count;
-                        break;
-                    case ConsoleKey.Enter:
-                        return Path.Join(_folderPath, files[selectedIndex]);
+                    selectedIndex = (selectedIndex + 1) % files.Count;
+                } else if (keyInfo.Key == ConsoleKey.Enter)
+                {
+                    return Path.Join(_folderPath, files[selectedIndex]);
                 }
 
             } while (keyInfo.Key != ConsoleKey.Escape);

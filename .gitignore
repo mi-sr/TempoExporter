@@ -87,3 +87,6 @@ $RECYCLE.BIN/
 .LSOverride
 .Spotlight-V100
 .Trashes
+
+#local config file
+**/config.Development.json

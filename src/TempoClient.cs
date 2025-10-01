@@ -37,7 +37,7 @@ namespace Tempo.Exporter
                 .ToDictionary
                 (
                     k => k.Key,
-                    v => v.Select(k => new TimeRange(TimeSpan.Parse(k.StartTime), TimeSpan.Parse(k.StartTime).Add(TimeSpan.FromSeconds(k.TimeSpentSeconds))))
+                    v => v.Select(k => new TimeRange(TimeSpan.Parse(k.StartTime), TimeSpan.Parse(k.StartTime).Add(TimeSpan.FromSeconds(k.TimeSpentSeconds)), k?.Issue?.Id ?? 0))
                 );
         }
 

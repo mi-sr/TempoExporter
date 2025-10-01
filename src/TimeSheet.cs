@@ -1,18 +1,28 @@
-﻿using NPOI.SS.Formula;
-using NPOI.SS.UserModel;
+﻿using NPOI.SS.UserModel;
 using NPOI.XSSF.UserModel;
 
 namespace Tempo.Exporter
 {
-    internal class TimeSheet(string path)
+    internal class TimeSheet
     {
-        private readonly string _path = path;
+        private string _path;
         private static readonly TimeSpan MinimumBreak = TimeSpan.FromMinutes(30);
+
+        public TimeSheet(string path)
+        {
+            _path = path;
+        }
 
         public void ExportWorkingTime(Dictionary<DateTime, IEnumerable<TimeRange>> workingDays)
         {
             var excelWorkbook = ReadExcelFile(_path);
-            var excelSheet = excelWorkbook.GetSheetAt(excelWorkbook.NumberOfSheets - 1);
+            var excelSheet = GetLastVisibleSheet(excelWorkbook);
+
+            if (excelSheet is null)
+            {
+                Console.WriteLine("No visible sheet has been found in the workbook. Time export has been aborted.");
+                return;
+            }
 
             foreach (var currentWorkingDay in workingDays)
             {
@@ -23,19 +33,34 @@ namespace Tempo.Exporter
                     continue;
                 }
 
-                var beginCell = excelSheet.GetRow(currentDateCell.RowIndex).GetCell(currentDateCell.ColumnIndex + 2);
-                var endCell = excelSheet.GetRow(currentDateCell.RowIndex).GetCell(currentDateCell.ColumnIndex + 3);
-                var pauseCell = excelSheet.GetRow(currentDateCell.RowIndex).GetCell(currentDateCell.ColumnIndex + 5);
+                var beginCell = GetCell(excelSheet, currentDateCell.RowIndex, currentDateCell.ColumnIndex + ArbeitszeitenConstants.OFFSET_BEGIN_CELL);
+                var endCell = GetCell(excelSheet, currentDateCell.RowIndex, currentDateCell.ColumnIndex + ArbeitszeitenConstants.OFFSET_END_CELL);
+                var pauseCell = GetCell(excelSheet, currentDateCell.RowIndex, currentDateCell.ColumnIndex + ArbeitszeitenConstants.OFFSET_PAUSE_CELL);
 
                 var workBegin = TimeRange.GetWorkBegin(currentWorkingDay.Value);
                 var workEnd = TimeRange.GetWorkEnd(currentWorkingDay.Value);
                 var pauseMinutes = TimeRange.CalculateBreaks(currentWorkingDay.Value);
 
-                // Append break if not recorded
+                if (currentWorkingDay.Value.All(wd => wd.IssueId == ArbeitszeitenConstants.KRANK_ISSUE_ID))
+                {
+                    beginCell.SetCellType(CellType.Blank);
+                    endCell.SetCellType(CellType.Blank);
+                    SetBemerkung(excelSheet, currentDateCell, "Krank");
+                    continue;
+                }
+
+                if (currentWorkingDay.Value.All(wd => wd.IssueId == ArbeitszeitenConstants.URLAUB_ISSUE_ID))
+                {
+                    beginCell.SetCellType(CellType.Blank);
+                    endCell.SetCellType(CellType.Blank);
+                    SetBemerkung(excelSheet, currentDateCell, "Urlaub");
+                    continue;
+                }
+
+                // Append or extend break if not recorded
                 if (workEnd - workBegin >= TimeSpan.FromHours(6) && TimeSpan.FromMinutes(pauseMinutes) < MinimumBreak)
                 {
                     var difference = MinimumBreak - TimeSpan.FromMinutes(pauseMinutes);
-                    
                     pauseMinutes = (int)MinimumBreak.TotalMinutes;
                     workEnd = workEnd.Add(difference);
                 }
@@ -51,9 +76,42 @@ namespace Tempo.Exporter
                 }
             }
 
-            BaseFormulaEvaluator.EvaluateAllFormulaCells(excelWorkbook);
+            XSSFFormulaEvaluator.EvaluateAllFormulaCells(excelWorkbook);
 
             SaveExcelFile(_path, excelWorkbook);
+        }
+
+        private static ISheet GetLastVisibleSheet(IWorkbook workbook)
+        {
+            ISheet sheet = null;
+
+            for (int i = 0; i < workbook.NumberOfSheets; i++)
+            {
+                if (workbook.GetSheetVisibility(i) != SheetVisibility.Hidden)
+                {
+                    sheet = workbook.GetSheetAt(i);
+                }
+            }
+
+            return sheet;
+        }
+
+        private static ICell GetCell(ISheet sheet, int rowIndex, int columnIndex)
+        {
+            var cell = sheet.GetRow(rowIndex).GetCell(columnIndex);
+
+            if (cell is null)
+            {
+                return sheet.GetRow(rowIndex).CreateCell(columnIndex);
+            }
+
+            return cell;
+        }
+
+        private static void SetBemerkung(ISheet sheet, ICell currentDateCell, string text)
+        {
+            var bemerkungCell = GetCell(sheet, currentDateCell.RowIndex, currentDateCell.ColumnIndex + ArbeitszeitenConstants.OFFSET_BEMERKUNG_CELL);
+            bemerkungCell.SetCellValue(text);
         }
 
         private static void SetTimeValue(IWorkbook workbook, TimeSpan? value, ICell cell)

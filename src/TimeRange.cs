@@ -1,11 +1,19 @@
 ﻿namespace Tempo.Exporter
 {
-    internal class TimeRange(TimeSpan from, TimeSpan to)
+    internal class TimeRange
     {
-        private TimeSpan From { get; set; } = from;
-        private TimeSpan To { get; set; } = to;
+        public TimeSpan From { get; private set; }
+        public TimeSpan To { get; private set; }
+        public int IssueId { get; private set; }
 
         public TimeSpan Duration => To - From;
+
+        public TimeRange(TimeSpan from, TimeSpan to, int issueId)
+        {
+            From = from;
+            To = to;
+            IssueId = issueId;
+        }
 
         internal static int CalculateBreaks(IEnumerable<TimeRange> timeRanges)
         {
@@ -34,7 +42,7 @@
 
         internal static TimeSpan GetWorkEnd(IEnumerable<TimeRange> timeRanges)
         {
-            return timeRanges.Max(t => t.To);   
+            return timeRanges.Max(t => t.To);
         }
     }
 }
