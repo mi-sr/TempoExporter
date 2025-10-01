@@ -34,7 +34,7 @@ jobs:
 
       # 4. Build & Publish as self-contained exe
       - name: Build exe
-        run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true --no-restore
+        run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 
       # 5. Upload exe as an artifact
       - name: Upload exe
@@ -47,7 +47,7 @@ jobs:
       # 5. Zip the artifacts
       - name: Zip artifacts
         run: |
-          Compress-Archive -Path publish/* -DestinationPath Tempo.Exporter.zip
+          Compress-Archive -Path **/publish/* -DestinationPath Tempo.Exporter.zip
 
       # 6. Create a release with the artifacts attached
       - name: Create Release
